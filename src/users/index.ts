@@ -1,7 +1,10 @@
 import { Hono } from "hono";
 import { userValidator } from "./validator";
+import { supabaseMiddleware } from "../middleware/supabase";
 
 const appUser = new Hono();
+
+appUser.use('*', supabaseMiddleware)
 
 appUser.get("/", async (c) => {
     return c.json({ users: ["Alice", "Bob", "Charlie"] });

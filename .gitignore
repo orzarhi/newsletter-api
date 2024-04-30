@@ -5,4 +5,3 @@ dist
 wrangler.toml
 .env
 .vscode
-pnpm-lock.yaml
