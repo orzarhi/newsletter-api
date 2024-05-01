@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import { userValidator } from "./validator";
 import { authMiddleware, getSupabase, supabaseMiddleware } from "../middleware";
+import { userValidator } from "./validator";
 
 const appUser = new Hono();
 
@@ -17,10 +17,25 @@ appUser.get("/", authMiddleware, async (c) => {
     return c.json(data, { status: 200 })
 });
 
-appUser.post('/', userValidator, async (c) => {
+appUser.post('/subscribe', userValidator, async (c) => {
+
     const body = await c.req.json()
 
+    const ratelimit = c.get('rateLimiter')
+    const ip = c.req.raw.headers.get('CF-Connecting-IP')
+
+    const { success } = await ratelimit.limit(ip ?? 'anonymous')
+
+    if (!success) {
+        return c.text('Rate limit exceeded', { status: 429 })
+    }
     const supabase = getSupabase(c)
+
+    const { data } = await supabase.from('users').select('*').eq('email', body.email)
+
+    if (data) {
+        return c.text('User already exists', { status: 400 })
+    }
 
     const { error } = await supabase.from('users').insert(body)
 
