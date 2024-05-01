@@ -11,7 +11,7 @@ appUser.get("/", authMiddleware, async (c) => {
     const { data, error } = await supabase.from('users').select('*')
 
     if (error) {
-        return c.text(error.message, { status: 500 })
+        return c.json(error.message, { status: 500 })
     }
 
     return c.json(data, { status: 200 })
@@ -26,7 +26,7 @@ appUser.post('/subscribe', userValidator, async (c) => {
         const { success } = await ratelimit.limit(ip ?? 'anonymous')
 
         if (!success) {
-            return c.text('Rate limit exceeded', { status: 429 })
+            return c.json('Rate limit exceeded', { status: 429 })
         }
 
         const body = await c.req.json()
@@ -36,16 +36,16 @@ appUser.post('/subscribe', userValidator, async (c) => {
         const { data } = await supabase.from('users').select('*').eq('email', body.email)
 
         if (data?.length) {
-            return c.text('Email already exists', { status: 403 })
+            return c.json('Email already exists', { status: 403 })
         }
 
         const { error } = await supabase.from('users').insert(body)
 
         if (error) {
-            return c.text(error.message, { status: 500 })
+            return c.json(error.message, { status: 500 })
         }
 
-        return c.text('Subscribed successfully', { status: 201 })
+        return c.json('Subscribed successfully', { status: 201 })
     } catch (error) {
         return c.json(error, { status: 500 })
     }
