@@ -45,7 +45,7 @@ appUser.post('/subscribe', userValidator, async (c) => {
             return c.text(error.message, { status: 500 })
         }
 
-        return c.text('Successfully subscribed', { status: 201 })
+        return c.text('Subscribed successfully', { status: 201 })
     } catch (error) {
         return c.json(error, { status: 500 })
     }
