@@ -6,4 +6,4 @@ export const userSchema = z.object({
     email: z.string().email().regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
 });
 
-export const userValidator = zValidator('form', userSchema);
+export const userValidator = zValidator('json', userSchema);

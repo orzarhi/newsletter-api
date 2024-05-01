@@ -18,7 +18,7 @@ appUser.get("/", authMiddleware, async (c) => {
 });
 
 appUser.post('/', userValidator, async (c) => {
-    const body = await c.req.parseBody()
+    const body = await c.req.json()
 
     const supabase = getSupabase(c)
 
