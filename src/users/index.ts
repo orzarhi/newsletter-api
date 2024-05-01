@@ -1,12 +1,12 @@
 import { Hono } from "hono";
 import { userValidator } from "./validator";
-import { getSupabase, supabaseMiddleware } from "../middleware/supabase";
+import { authMiddleware, getSupabase, supabaseMiddleware } from "../middleware";
 
 const appUser = new Hono();
 
 appUser.use('*', supabaseMiddleware)
 
-appUser.get("/", async (c) => {
+appUser.get("/", authMiddleware, async (c) => {
     const supabase = getSupabase(c)
     const { data, error } = await supabase.from('users').select('*')
 
