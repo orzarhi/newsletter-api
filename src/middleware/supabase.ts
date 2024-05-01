@@ -1,9 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { Context, MiddlewareHandler } from 'hono'
 
-
-export const idTokenContext = 'supabase-id'
-
 export const supabaseMiddleware: MiddlewareHandler = async (c, next) => {
     try {
         if (!c.env.SUPABASE_URL) {
@@ -16,7 +13,7 @@ export const supabaseMiddleware: MiddlewareHandler = async (c, next) => {
 
         const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_KEY)
 
-        c.set(idTokenContext, supabase)
+        c.set(c.env.ID_TOKEN_CONTEXT, supabase)
 
         await next()
     } catch (error) {
@@ -25,4 +22,4 @@ export const supabaseMiddleware: MiddlewareHandler = async (c, next) => {
     }
 }
 
-export const getSupabase = (c: Context): SupabaseClient => c.get(idTokenContext)
+export const getSupabase = (c: Context): SupabaseClient => c.get(c.env.ID_TOKEN_CONTEXT)

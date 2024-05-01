@@ -14,7 +14,7 @@ appUser.get("/", async (c) => {
         return c.text(error.message, { status: 500 })
     }
 
-    return c.json(data)
+    return c.json(data, { status: 200 })
 });
 
 appUser.post('/', userValidator, async (c) => {
@@ -22,13 +22,13 @@ appUser.post('/', userValidator, async (c) => {
 
     const supabase = getSupabase(c)
 
-    const { data, error } = await supabase.from('users').insert(body).select()
+    const { error } = await supabase.from('users').insert(body)
 
     if (error) {
         return c.text(error.message, { status: 500 })
     }
 
-    return c.json(data)
+    return c.text('User created', { status: 201 })
 })
 
 export default appUser;
