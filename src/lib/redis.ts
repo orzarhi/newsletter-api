@@ -1,12 +1,12 @@
 import { Ratelimit } from "@upstash/ratelimit"
-import { Redis } from "@upstash/redis"
+import { Redis } from "@upstash/redis/cloudflare"
 import { Context, Env } from "hono"
 import { env } from "hono/adapter"
 import { BlankInput } from "hono/types"
 
 declare module "hono" {
     interface ContextVariableMap {
-        rateLimiter: Ratelimit
+        ratelimit: Ratelimit
     }
 }
 
@@ -20,7 +20,7 @@ type Environment = {
 export class RedisRateLimiter {
     static instance: Ratelimit
 
-    static getInstance(c: Context<Env, '/subscribe', BlankInput>) {
+    static getInstance(c: Context<Env, '/api/users/subscribe', BlankInput>) {
         if (!this.instance) {
             const { REDIS_TOKEN, REDIS_UEL } = env<Environment>(c)
 
@@ -29,13 +29,13 @@ export class RedisRateLimiter {
                 token: REDIS_TOKEN
             })
 
-            const rateLimiter = new Ratelimit({
+            const ratelimit = new Ratelimit({
                 redis: redisClient,
-                limiter: Ratelimit.slidingWindow(10, "10s"),
+                limiter: Ratelimit.slidingWindow(3, "10s"),
                 ephemeralCache: cache
             })
 
-            this.instance = rateLimiter
+            this.instance = ratelimit
 
             return this.instance
         } else {

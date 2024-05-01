@@ -1,10 +1,10 @@
 import { Hono } from "hono";
-import { authMiddleware, getSupabase, supabaseMiddleware } from "../middleware";
+import { authMiddleware, getSupabase, ratelimitMiddleware, supabaseMiddleware } from "../middleware";
 import { userValidator } from "./validator";
 
 const appUser = new Hono();
 
-appUser.use('*', supabaseMiddleware)
+appUser.use('*', supabaseMiddleware, ratelimitMiddleware)
 
 appUser.get("/", authMiddleware, async (c) => {
     const supabase = getSupabase(c)
@@ -18,32 +18,37 @@ appUser.get("/", authMiddleware, async (c) => {
 });
 
 appUser.post('/subscribe', userValidator, async (c) => {
+    try {
+        const ratelimit = c.get('ratelimit')
 
-    const body = await c.req.json()
+        const ip = c.req.raw.headers.get('CF-Connecting-IP')
 
-    const ratelimit = c.get('rateLimiter')
-    const ip = c.req.raw.headers.get('CF-Connecting-IP')
+        const { success } = await ratelimit.limit(ip ?? 'anonymous')
 
-    const { success } = await ratelimit.limit(ip ?? 'anonymous')
+        if (!success) {
+            return c.text('Rate limit exceeded', { status: 429 })
+        }
 
-    if (!success) {
-        return c.text('Rate limit exceeded', { status: 429 })
+        const body = await c.req.json()
+
+        const supabase = getSupabase(c)
+
+        const { data } = await supabase.from('users').select('*').eq('email', body.email)
+
+        if (data?.length) {
+            return c.text('Email already exists', { status: 403 })
+        }
+
+        const { error } = await supabase.from('users').insert(body)
+
+        if (error) {
+            return c.text(error.message, { status: 500 })
+        }
+
+        return c.text('Successfully subscribed', { status: 201 })
+    } catch (error) {
+        return c.json(error, { status: 500 })
     }
-    const supabase = getSupabase(c)
-
-    const { data } = await supabase.from('users').select('*').eq('email', body.email)
-
-    if (data) {
-        return c.text('User already exists', { status: 400 })
-    }
-
-    const { error } = await supabase.from('users').insert(body)
-
-    if (error) {
-        return c.text(error.message, { status: 500 })
-    }
-
-    return c.text('User created', { status: 201 })
 })
 
 export default appUser;
