@@ -2,7 +2,8 @@ import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 
 export const userSchema = z.object({
-    name: z.string().regex(/^[a-zA-Z\s]*$/).min(4, { message: 'Name must be at least 4 characters long' }).max(50, { message: 'Name must be at most 50 characters long' }),
+    fullName: z.string().regex(/^[a-zA-Z\s]*$/).min(4, { message: 'Name must be at least 4 characters long' })
+        .max(20, { message: 'Name must be at most 20 characters long' }).refine(data => data.trim().split(' ').length > 1, { message: 'Name must contain first and last name' }),
     email: z.string().email().regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
 });
 
